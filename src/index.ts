@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
-import express from 'express';
-import { Method, Send, register } from '@reflet/express';
+import express, { Request } from 'express';
+import { Method, Req, Send, register } from '@reflet/express';
 import morgan from 'morgan';
 import { Logger } from '@app/logger';
 import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-flag-emoji';
@@ -103,7 +103,7 @@ app.use(morgan((tokens, req, res): string => {
 export class Router {
     @Send()
     @Method('all', '*')
-    async route() {
+    async route(@Req request: Request) {
         return outdent`
             <!DOCTYPE html>
             <html>
@@ -112,7 +112,7 @@ export class Router {
                     <meta http-equiv="X-UA-Compatible" content="IE=edge">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
                     <meta name="apple-mobile-web-app-capable" content="yes">
-                    <title>fish.lgbt</title>
+                    <title>${request.hostname}</title>
                     <style>
                     * { 
                         box-sizing: padding-box;
@@ -143,7 +143,7 @@ export class Router {
                 </head>
                 <body>
                     <div class="container">
-                        <div class="content">fish.lgbt</div>
+                        <div class="content">${request.hostname}</div>
                     </div>
                 </body>
             </html>        
