@@ -46,4 +46,4 @@ COPY --from=build /app/dist /app/dist
 COPY tsconfig.json /app/
 # expose port and define CMD
 EXPOSE 3000
-CMD node /app/dist/main.cjs
+CMD node /app/dist/index.js
