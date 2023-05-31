@@ -7,6 +7,7 @@ import { Logger } from '@app/logger';
 import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-flag-emoji';
 import { environment } from '@app/environment';
 import outdent from 'outdent';
+import { fetch } from 'undici';
 
 const logger = new Logger({ service: 'views' });
 
