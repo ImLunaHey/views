@@ -69,6 +69,9 @@ const getLocation = async (ip: string) => {
     }
 };
 
+// Disable the header
+app.disable('x-powered-by');
+
 // Since were using a reverse proxy
 // we need this to get the correct client IP
 app.enable('trust proxy');
