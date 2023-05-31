@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import express, { Request } from 'express';
-import { Get, Method, Req, Send, register } from '@reflet/express';
+import { Body, Get, Method, Post, Req, Send, register } from '@reflet/express';
 import morgan from 'morgan';
 import { Logger } from '@app/logger';
 import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-flag-emoji';
@@ -10,12 +10,15 @@ import outdent from 'outdent';
 import { fetch } from 'undici';
 import parseUserAgent from 'ua-parser-js';
 import helmet from 'helmet';
+import { z } from 'zod';
+import requestID from 'express-request-id';
 
 const logger = new Logger({ service: 'views' });
 
 const app = express();
 
 type View = {
+    id?: string;
     hostname?: string;
     'remote-address'?: string;
     method?: string;
@@ -73,6 +76,9 @@ const getLocation = async (ip: string) => {
 // Make shit more secure
 app.use(helmet());
 
+// Allow logs to be tracked across the whole stack
+app.use(requestID());
+
 // Allow every single permission
 app.use((_request, response, next) => {
     response.setHeader('Permissions-Policy', 'accelerometer=(self), ambient-light-sensor=(self), autoplay=(self), battery=(self), camera=(self), cross-origin-isolated=(self), display-capture=(self), document-domain=(self), encrypted-media=(self), execution-while-not-rendered=(self), execution-while-out-of-viewport=(self), fullscreen=(self), geolocation=(self), gyroscope=(self), keyboard-map=(self), magnetometer=(self), microphone=(self), midi=(self), navigation-override=(self), payment=(self), picture-in-picture=(self), publickey-credentials-get=(self), screen-wake-lock=(self), sync-xhr=(self), usb=(self), web-share=(self), xr-spatial-tracking=(self), clipboard-read=(self), clipboard-write=(self), gamepad=(self), speaker-selection=(self), conversion-measurement=(self), focus-without-user-activation=(self), hid=(self), idle-detection=(self), interest-cohort=(self), serial=(self), sync-script=(self), trust-token-redemption=(self), unload=(self), window-placement=(self), vertical-scroll=(self)');
@@ -84,9 +90,11 @@ app.use((_request, response, next) => {
 app.enable('trust proxy');
 
 morgan.token('hostname', (request: Request) => request.hostname);
+morgan.token('requestId', (request: Request) => request.headers['X-Request-Id'] as string);
 
 app.use(morgan((tokens, req, res): string => {
     return JSON.stringify({
+        id: tokens['requestId'](req, res),
         hostname: tokens['hostname'](req, res),
         'remote-address': tokens['remote-addr'](req, res),
         'method': tokens['method'](req, res),
@@ -124,6 +132,21 @@ export class Router {
             User-agent: *
             Allow: /
         `;
+    }
+
+    @Send({ status: 201 })
+    @Post('/')
+    ingest(@Body() body: unknown) {
+        try {
+            const parsedData = z.object({
+
+            }).parse(body);
+            logger.info('ingest', parsedData);
+        } catch (error: unknown) {
+            logger.error('failed ingesting data', {
+                error,
+            });
+        }
     }
 
     @Send()
@@ -171,6 +194,7 @@ export class Router {
                         <div class="content">${request.hostname}</div>
                     </div>
                 </body>
+                <script></script>
             </html>        
         `;
     }
