@@ -9,6 +9,7 @@ import { environment } from '@app/environment';
 import outdent from 'outdent';
 import { fetch } from 'undici';
 import parseUserAgent from 'ua-parser-js';
+import helmet from 'helmet';
 
 const logger = new Logger({ service: 'views' });
 
@@ -69,8 +70,8 @@ const getLocation = async (ip: string) => {
     }
 };
 
-// Disable the header
-app.disable('x-powered-by');
+// Make shit more secure
+app.use(helmet());
 
 // Since were using a reverse proxy
 // we need this to get the correct client IP
