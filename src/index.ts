@@ -14,6 +14,7 @@ const logger = new Logger({ service: 'views' });
 const app = express();
 
 type View = {
+    hostname?: string;
     'remote-address'?: string;
     method?: string;
     url?: string;
@@ -71,8 +72,11 @@ const getLocation = async (ip: string) => {
 // we need this to get the correct client IP
 app.enable('trust proxy');
 
+morgan.token('hostname', (request: Request) => request.hostname);
+
 app.use(morgan((tokens, req, res): string => {
     return JSON.stringify({
+        hostname: tokens['hostname'](req, res),
         'remote-address': tokens['remote-addr'](req, res),
         'method': tokens['method'](req, res),
         'url': tokens['url'](req, res),
