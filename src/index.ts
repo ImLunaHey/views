@@ -65,6 +65,10 @@ const getLocation = async (ip: string) => {
     }
 };
 
+// Since were using a reverse proxy
+// we need this to get the correct client IP
+app.enable('trust proxy');
+
 app.use(morgan((tokens, req, res): string => {
     return JSON.stringify({
         'remote-address': tokens['remote-addr'](req, res),
@@ -78,16 +82,19 @@ app.use(morgan((tokens, req, res): string => {
 }, {
     stream: {
         write: async (data: string) => {
-            const message = JSON.parse(data) as View;
-            const location = await getLocation(message['remote-address']!);
-            console.log('view', {
-                ...message,
-                location,
-            });
-            logger.info('view', {
-                ...message,
-                location,
-            });
+            try {
+                const message = JSON.parse(data) as View;
+                const location = await getLocation(message['remote-address']!);
+                logger.info('view', {
+                    ...message,
+                    location,
+                });
+            } catch (error: unknown) {
+                logger.error('failed logging', {
+                    error,
+                    data,
+                });
+            }
         },
     },
 }));
