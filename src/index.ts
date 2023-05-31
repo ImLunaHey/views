@@ -8,6 +8,7 @@ import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-fl
 import { environment } from '@app/environment';
 import outdent from 'outdent';
 import { fetch } from 'undici';
+import parseUserAgent from 'ua-parser-js';
 
 const logger = new Logger({ service: 'views' });
 
@@ -21,7 +22,7 @@ type View = {
     'http-version'?: string;
     'status-code'?: string;
     referrer?: string;
-    'user-agent'?: string;
+    'user-agent'?: ReturnType<typeof parseUserAgent>;
 };
 
 type IpInfo = {
@@ -83,7 +84,7 @@ app.use(morgan((tokens, req, res): string => {
         'http-version': tokens['http-version'](req, res),
         'status-code': tokens['status'](req, res),
         'referrer': tokens['referrer'](req, res),
-        'user-agent': tokens['user-agent'](req, res),
+        'user-agent': parseUserAgent(tokens['user-agent'](req, res)),
     } satisfies View);
 }, {
     stream: {
