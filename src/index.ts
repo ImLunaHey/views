@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import express, { Request } from 'express';
-import { Method, Req, Send, register } from '@reflet/express';
+import { Get, Method, Req, Send, register } from '@reflet/express';
 import morgan from 'morgan';
 import { Logger } from '@app/logger';
 import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-flag-emoji';
@@ -107,6 +107,15 @@ app.use(morgan((tokens, req, res): string => {
 }));
 
 export class Router {
+    @Send()
+    @Get('/robots.txt')
+    robotsTxt() {
+        return outdent`
+            User-agent: *
+            Allow: /
+        `;
+    }
+
     @Send()
     @Method('all', '*')
     async route(@Req request: Request) {
