@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { Logger } from '@app/logger';
 import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-flag-emoji';
 import { environment } from '@app/environment';
+import outdent from 'outdent';
 
 const logger = new Logger({ service: 'views' });
 
@@ -103,7 +104,50 @@ export class Router {
     @Send()
     @Method('all', '*')
     async route() {
-        return 200;
+        return outdent`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                    <meta name="apple-mobile-web-app-capable" content="yes">
+                    <title>fish.lgbt</title>
+                    <style>
+                    * { 
+                        box-sizing: padding-box;
+                    }
+                    html {
+                        height: 100%;
+                        background: black;
+                        color: white;
+                    }
+                    body {
+                        font-family: monospace;
+                        font-size: 14px;
+                        height: 100%;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        height: 100%;
+                        position: relative;
+                    }
+                    .content {
+                        text-align: center;
+                        position: relative;
+                        top: 50%;
+                        transform: translateY(-50%);
+                    }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="content">fish.lgbt</div>
+                    </div>
+                </body>
+            </html>        
+        `;
     }
 }
 
