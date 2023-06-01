@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import express, { Request } from 'express';
-import { Body, Get, Method, Post, Req, Send, register } from '@reflet/express';
+import { Body, Get, Headers, Method, Post, Req, Send, register } from '@reflet/express';
 import morgan from 'morgan';
 import { Logger } from '@app/logger';
 import { countryCodes, get as getCountryFlagEmoji } from '@app/common/country-flag-emoji';
@@ -12,6 +12,7 @@ import parseUserAgent from 'ua-parser-js';
 import helmet from 'helmet';
 import { z } from 'zod';
 import requestID from 'express-request-id';
+import { script } from '@app/frontend';
 
 const logger = new Logger({ service: 'views' });
 
@@ -26,6 +27,7 @@ type View = {
     'http-version'?: string;
     'status-code'?: string;
     referrer?: string;
+    headers?: Record<string, unknown>;
     'user-agent'?: ReturnType<typeof parseUserAgent>;
 };
 
@@ -89,20 +91,18 @@ app.use((_request, response, next) => {
 // we need this to get the correct client IP
 app.enable('trust proxy');
 
-morgan.token('hostname', (request: Request) => request.hostname);
-morgan.token('requestId', (request: Request) => request.headers['X-Request-Id'] as string);
-
-app.use(morgan((tokens, req, res): string => {
+app.use(morgan((tokens, request, response): string => {
     return JSON.stringify({
-        id: tokens['requestId'](req, res),
-        hostname: tokens['hostname'](req, res),
-        'remote-address': tokens['remote-addr'](req, res),
-        'method': tokens['method'](req, res),
-        'url': tokens['url'](req, res),
-        'http-version': tokens['http-version'](req, res),
-        'status-code': tokens['status'](req, res),
-        'referrer': tokens['referrer'](req, res),
-        'user-agent': parseUserAgent(tokens['user-agent'](req, res)),
+        id: request.headers['X-Request-Id'] as string,
+        hostname: request.hostname,
+        'remote-address': tokens['remote-addr'](request, response),
+        method: tokens['method'](request, response),
+        url: tokens['url'](request, response),
+        'http-version': tokens['http-version'](request, response),
+        'status-code': tokens['status'](request, response),
+        referrer: tokens['referrer'](request, response),
+        headers: request.headers,
+        'user-agent': parseUserAgent(tokens['user-agent'](request, response)),
     } satisfies View);
 }, {
     stream: {
@@ -136,12 +136,16 @@ export class Router {
 
     @Send({ status: 201 })
     @Post('/')
-    ingest(@Body() body: unknown) {
+    ingest(@Body() body: unknown, @Headers('x-request-id' as any) requestId: string) {
         try {
             const parsedData = z.object({
 
             }).parse(body);
-            logger.info('ingest', parsedData);
+            const id = z.string().parse(requestId);
+            logger.info('ingest', {
+                ...parsedData,
+                id,
+            });
         } catch (error: unknown) {
             logger.error('failed ingesting data', {
                 error,
@@ -194,7 +198,7 @@ export class Router {
                         <div class="content">${request.hostname}</div>
                     </div>
                 </body>
-                <script></script>
+                <script>${script}</script>
             </html>        
         `;
     }
