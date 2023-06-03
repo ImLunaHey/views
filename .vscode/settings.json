@@ -2,5 +2,8 @@
     "autoHide.autoHidePanel": false,
     "autoHide.autoHideSideBar": false,
     "autoRestartTsESLint.monitorFilesForTypescript": true,
-    "dotenv.enableAutocloaking": false
+    "dotenv.enableAutocloaking": false,
+    "cSpell.words": [
+        "Italiano"
+    ]
 }
